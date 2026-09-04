@@ -1,18 +1,28 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Borivert: citanje smije svatko tko je prijavljen (admin ili gost kojeg je admin kreirao),
-    // pisanje smije samo vlasnik (po e-mailu naloga).
+    // Borivert: citanje smije svatko tko je prijavljen (admin ili gost kojeg je admin
+    // kreirao preko Cloud Functiona), pisanje samo vlasnik. Uz to, provjeravamo da su
+    // upisani podaci ispravnog oblika — ne prihvacamo bilo koji JSON.
     function isSignedIn() {
       return request.auth != null;
     }
     function isOwner() {
       return request.auth != null && request.auth.token.email == 'boris.kikelj@gmail.com';
     }
+    function validRace(data) {
+      return data.naziv is string && data.naziv.size() > 0 && data.naziv.size() < 200
+        && data.tip is string
+        && data.datumPocetka is timestamp
+        && data.statusPrijave in ['planirano', 'prijavljeno', 'mozda', 'otrcano', 'otkazano']
+        && (!('duljinaKm' in data) || data.duljinaKm == null || data.duljinaKm is number)
+        && (!('visinaM' in data) || data.visinaM == null || data.visinaM is number);
+    }
 
     match /races/{raceId} {
       allow read: if isSignedIn();
-      allow write: if isOwner();
+      allow create, update: if isOwner() && validRace(request.resource.data);
+      allow delete: if isOwner();
     }
 
     match /trainings/{trainingId} {

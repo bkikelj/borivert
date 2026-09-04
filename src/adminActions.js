@@ -1,18 +1,14 @@
-// Kreiranje gostujuceg (view-only) korisnika iz admin panela, bez odjave admina.
-// Trik: kreiramo PRIVREMENU, drugu Firebase app instancu samo za tu jednu radnju —
-// tako se admin ne izbaci iz svoje prijave (createUserWithEmailAndPassword inace
-// automatski prijavljuje novog korisnika na klijentu na kojem se pozove).
-import { deleteApp, initializeApp } from 'firebase/app'
-import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth'
-import { firebaseConfig } from './firebase'
+// Kreiranje gostujuceg (view-only) korisnika iz admin panela.
+// Poziva se preko Cloud Functiona (functions/index.js -> createViewerAccount),
+// koji koristi Admin SDK — pa admin ostaje prijavljen, i racun prolazi mimo
+// beforeCreate blokirajuce funkcije (vidi komentar u functions/index.js).
+import { getFunctions, httpsCallable } from 'firebase/functions'
+import { app } from './firebase'
+
+const functions = getFunctions(app)
 
 export async function createViewerAccount(email, password) {
-  const secondaryApp = initializeApp(firebaseConfig, `admin-create-${Date.now()}`)
-  const secondaryAuth = getAuth(secondaryApp)
-  try {
-    await createUserWithEmailAndPassword(secondaryAuth, email, password)
-    await signOut(secondaryAuth)
-  } finally {
-    await deleteApp(secondaryApp)
-  }
+  const call = httpsCallable(functions, 'createViewerAccount')
+  const { data } = await call({ email, password })
+  return data
 }

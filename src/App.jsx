@@ -5,6 +5,7 @@ import { db } from './firebase'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './components/Login'
 import AdminUsers from './components/AdminUsers'
+import AdminSecurity from './components/AdminSecurity'
 import AddRaceForm from './components/AddRaceForm'
 import StatusPill from './components/StatusPill'
 
@@ -87,9 +88,14 @@ function RaceList() {
         </div>
         <div className="flex flex-col items-end gap-2 font-mono text-xs">
           {isOwner && (
-            <Link to="/admin/korisnici" className="text-accent hover:underline">
-              korisnici
-            </Link>
+            <div className="flex gap-3">
+              <Link to="/admin/korisnici" className="text-accent hover:underline">
+                korisnici
+              </Link>
+              <Link to="/admin/sigurnost" className="text-accent hover:underline">
+                sigurnost
+              </Link>
+            </div>
           )}
           <button type="button" onClick={logout} className="text-muted hover:underline">
             odjava
@@ -130,6 +136,7 @@ function Gate() {
     <Routes>
       <Route path="/" element={<RaceList />} />
       <Route path="/admin/korisnici" element={<AdminUsers />} />
+      <Route path="/admin/sigurnost" element={<AdminSecurity />} />
     </Routes>
   )
 }
