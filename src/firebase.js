@@ -1,7 +1,7 @@
 // Firebase inicijalizacija — koristi VITE_FIREBASE_* varijable iz .env datoteke.
 // Vrijednosti dobiješ u Firebase konzoli: Project settings -> General -> Your apps -> Web app.
 import { initializeApp } from 'firebase/app'
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check'
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
@@ -27,7 +27,7 @@ export const app = initializeApp(firebaseConfig)
 // i upises VITE_RECAPTCHA_SITE_KEY u .env — do tada se jednostavno preskace.
 if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
   initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
+    provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
     isTokenAutoRefreshEnabled: true,
   })
 }
