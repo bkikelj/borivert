@@ -3,7 +3,7 @@
     "rules": "firestore.rules"
   },
   "storage": {
-    "bucket": "borivert-9c814.firebasestorage.app",
+    "target": "default",
     "rules": "storage.rules"
   },
   "functions": {
