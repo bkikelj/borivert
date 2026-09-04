@@ -1,19 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Borivert je osobna aplikacija — pisanje smije samo vlasnik (po e-mailu naloga),
-    // citanje je javno (utrke nisu osjetljiv podatak), za javni pregled bez prijave.
+    // Borivert: citanje smije svatko tko je prijavljen (admin ili gost kojeg je admin kreirao),
+    // pisanje smije samo vlasnik (po e-mailu naloga).
+    function isSignedIn() {
+      return request.auth != null;
+    }
     function isOwner() {
       return request.auth != null && request.auth.token.email == 'boris.kikelj@gmail.com';
     }
 
     match /races/{raceId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow write: if isOwner();
     }
 
     match /trainings/{trainingId} {
-      allow read: if true;
+      allow read: if isSignedIn();
       allow write: if isOwner();
     }
   }

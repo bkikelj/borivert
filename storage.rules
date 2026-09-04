@@ -2,7 +2,7 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     match /gpx/{allPaths=**} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.token.email == 'boris.kikelj@gmail.com';
     }
   }
