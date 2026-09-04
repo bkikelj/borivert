@@ -2,6 +2,14 @@
   "projects": {
     "default": "borivert-9c814"
   },
-  "targets": {},
+  "targets": {
+    "borivert-9c814": {
+      "storage": {
+        "default": [
+          "borivert-9c814.firebasestorage.app"
+        ]
+      }
+    }
+  },
   "etags": {}
 }
