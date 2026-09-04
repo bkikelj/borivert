@@ -7,7 +7,7 @@ import Login from './components/Login'
 import NavBar from './components/NavBar'
 import AdminUsers from './components/AdminUsers'
 import AdminSecurity from './components/AdminSecurity'
-import AddRaceForm from './components/AddRaceForm'
+import RaceForm from './components/RaceForm'
 import Modal from './components/Modal'
 import StatusPill from './components/StatusPill'
 
@@ -17,7 +17,7 @@ function formatDate(value) {
   return d.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-function RaceCard({ race, isOwner, onDelete }) {
+function RaceCard({ race, isOwner, onEdit, onDelete }) {
   return (
     <li className="flex flex-col rounded-xl border border-line bg-surface p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -28,14 +28,24 @@ function RaceCard({ race, isOwner, onDelete }) {
         <div className="flex items-center gap-2">
           <StatusPill status={race.statusPrijave} />
           {isOwner && (
-            <button
-              type="button"
-              onClick={() => onDelete(race.id)}
-              className="font-mono text-xs text-long hover:underline"
-              title="Obriši utrku"
-            >
-              obriši
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => onEdit(race)}
+                className="font-mono text-xs text-accent hover:underline"
+                title="Uredi utrku"
+              >
+                uredi
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(race.id)}
+                className="font-mono text-xs text-long hover:underline"
+                title="Obriši utrku"
+              >
+                obriši
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -57,7 +67,7 @@ function RaceList() {
   const { isOwner } = useAuth()
   const [races, setRaces] = useState([])
   const [status, setStatus] = useState('ucitavanje')
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [formTarget, setFormTarget] = useState(null) // null = zatvoreno, 'new' = dodavanje, objekt = uredivanje
 
   const load = useCallback(async () => {
     setStatus('ucitavanje')
@@ -89,7 +99,7 @@ function RaceList() {
         {isOwner && (
           <button
             type="button"
-            onClick={() => setShowAddForm(true)}
+            onClick={() => setFormTarget('new')}
             className="whitespace-nowrap rounded-lg bg-accent px-4 py-2.5 font-medium text-white"
           >
             + Dodaj utrku
@@ -108,16 +118,20 @@ function RaceList() {
       {status === 'ok' && races.length > 0 && (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {races.map((race) => (
-            <RaceCard key={race.id} race={race} isOwner={isOwner} onDelete={handleDelete} />
+            <RaceCard key={race.id} race={race} isOwner={isOwner} onEdit={setFormTarget} onDelete={handleDelete} />
           ))}
         </ul>
       )}
 
-      {showAddForm && (
-        <Modal title="Dodaj utrku" onClose={() => setShowAddForm(false)}>
-          <AddRaceForm
-            onAdded={() => {
-              setShowAddForm(false)
+      {formTarget && (
+        <Modal
+          title={formTarget === 'new' ? 'Dodaj utrku' : 'Uredi utrku'}
+          onClose={() => setFormTarget(null)}
+        >
+          <RaceForm
+            race={formTarget === 'new' ? null : formTarget}
+            onSaved={() => {
+              setFormTarget(null)
               load()
             }}
           />
