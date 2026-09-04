@@ -55,8 +55,7 @@ export default function AddRaceForm({ onAdded }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-8 flex flex-col gap-3 rounded-xl border border-line bg-surface p-4">
-      <h3 className="font-display text-lg font-bold">Dodaj utrku</h3>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <input placeholder="Naziv utrke" value={form.naziv} onChange={set('naziv')} className="rounded-lg border border-line px-3 py-2" />
       <input placeholder="Lokacija" value={form.lokacija} onChange={set('lokacija')} className="rounded-lg border border-line px-3 py-2" />
       <div className="flex gap-2">

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
 import { collection, deleteDoc, doc, getDocs, orderBy, query } from 'firebase/firestore'
 import { db } from './firebase'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './components/Login'
+import NavBar from './components/NavBar'
 import AdminUsers from './components/AdminUsers'
 import AdminSecurity from './components/AdminSecurity'
 import AddRaceForm from './components/AddRaceForm'
+import Modal from './components/Modal'
 import StatusPill from './components/StatusPill'
 
 function formatDate(value) {
@@ -17,7 +19,7 @@ function formatDate(value) {
 
 function RaceCard({ race, isOwner, onDelete }) {
   return (
-    <li className="rounded-xl border border-line bg-surface p-4 shadow-sm">
+    <li className="flex flex-col rounded-xl border border-line bg-surface p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-display text-lg font-bold">{race.naziv}</h3>
@@ -52,9 +54,10 @@ function RaceCard({ race, isOwner, onDelete }) {
 }
 
 function RaceList() {
-  const { isOwner, logout } = useAuth()
+  const { isOwner } = useAuth()
   const [races, setRaces] = useState([])
   const [status, setStatus] = useState('ucitavanje')
+  const [showAddForm, setShowAddForm] = useState(false)
 
   const load = useCallback(async () => {
     setStatus('ucitavanje')
@@ -80,30 +83,19 @@ function RaceList() {
   }
 
   return (
-    <div className="mx-auto min-h-svh max-w-2xl px-6 py-10">
-      <header className="mb-8 flex items-start justify-between border-b border-line pb-6">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-wider text-muted">Borivert</p>
-          <h1 className="font-display text-4xl font-bold">Moje utrke</h1>
-        </div>
-        <div className="flex flex-col items-end gap-2 font-mono text-xs">
-          {isOwner && (
-            <div className="flex gap-3">
-              <Link to="/admin/korisnici" className="text-accent hover:underline">
-                korisnici
-              </Link>
-              <Link to="/admin/sigurnost" className="text-accent hover:underline">
-                sigurnost
-              </Link>
-            </div>
-          )}
-          <button type="button" onClick={logout} className="text-muted hover:underline">
-            odjava
+    <div className="mx-auto max-w-5xl px-6 py-10">
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <h1 className="font-display text-3xl font-bold">Moje utrke</h1>
+        {isOwner && (
+          <button
+            type="button"
+            onClick={() => setShowAddForm(true)}
+            className="whitespace-nowrap rounded-lg bg-accent px-4 py-2.5 font-medium text-white"
+          >
+            + Dodaj utrku
           </button>
-        </div>
-      </header>
-
-      {isOwner && <AddRaceForm onAdded={load} />}
+        )}
+      </div>
 
       {status === 'ucitavanje' && <p className="text-muted">Učitavanje...</p>}
       {status === 'greska' && (
@@ -114,11 +106,22 @@ function RaceList() {
       )}
       {status === 'ok' && races.length === 0 && <p className="text-muted">Još nema unesenih utrka.</p>}
       {status === 'ok' && races.length > 0 && (
-        <ul className="flex flex-col gap-3">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {races.map((race) => (
             <RaceCard key={race.id} race={race} isOwner={isOwner} onDelete={handleDelete} />
           ))}
         </ul>
+      )}
+
+      {showAddForm && (
+        <Modal title="Dodaj utrku" onClose={() => setShowAddForm(false)}>
+          <AddRaceForm
+            onAdded={() => {
+              setShowAddForm(false)
+              load()
+            }}
+          />
+        </Modal>
       )}
     </div>
   )
@@ -133,11 +136,14 @@ function Gate() {
     return <Login />
   }
   return (
-    <Routes>
-      <Route path="/" element={<RaceList />} />
-      <Route path="/admin/korisnici" element={<AdminUsers />} />
-      <Route path="/admin/sigurnost" element={<AdminSecurity />} />
-    </Routes>
+    <div className="min-h-svh bg-bg">
+      <NavBar />
+      <Routes>
+        <Route path="/" element={<RaceList />} />
+        <Route path="/admin/korisnici" element={<AdminUsers />} />
+        <Route path="/admin/sigurnost" element={<AdminSecurity />} />
+      </Routes>
+    </div>
   )
 }
 
