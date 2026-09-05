@@ -15,7 +15,10 @@ import StatusPill from './components/StatusPill'
 function formatDate(value) {
   if (!value) return ''
   const d = value.toDate ? value.toDate() : new Date(value)
-  return d.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  return `${dd}.${mm}.${yyyy}.`
 }
 
 function RaceCard({ race, isOwner, onEdit, onDelete }) {
