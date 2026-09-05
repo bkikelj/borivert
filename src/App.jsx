@@ -11,62 +11,98 @@ import RaceForm from './components/RaceForm'
 import AddRaceViaLink from './components/AddRaceViaLink'
 import Modal from './components/Modal'
 import StatusPill from './components/StatusPill'
-
-function formatDate(value) {
-  if (!value) return ''
-  const d = value.toDate ? value.toDate() : new Date(value)
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = d.getFullYear()
-  return `${dd}.${mm}.${yyyy}.`
-}
+import CalendarView from './components/CalendarView'
+import { IconElevation, IconLink, IconMap, IconPin, IconRoute } from './components/Icons'
+import { formatDateParts } from './dateUtils'
 
 function RaceCard({ race, isOwner, onEdit, onDelete }) {
+  const datum = formatDateParts(race.datumPocetka)
   return (
-    <li className="flex flex-col rounded-xl border border-line bg-surface p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="break-words font-display text-lg font-bold">{race.naziv}</h3>
-          <p className="break-words text-sm text-muted">{race.lokacija}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <StatusPill status={race.statusPrijave} />
-          {isOwner && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => onEdit(race)}
-                className="font-mono text-xs text-accent hover:underline"
-                title="Uredi utrku"
-              >
-                uredi
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(race.id)}
-                className="font-mono text-xs text-long hover:underline"
-                title="Obriši utrku"
-              >
-                obriši
-              </button>
-            </div>
-          )}
-        </div>
+    <li className="flex overflow-hidden rounded-xl border border-line bg-surface shadow-sm">
+      <div className="flex w-16 flex-none flex-col items-center justify-center gap-0.5 border-r border-line bg-surface-2 py-3 font-mono">
+        {datum ? (
+          <>
+            <span className="text-[11px] font-semibold tracking-wide text-muted">{datum.mjesec}</span>
+            <span className="text-2xl font-bold leading-none">{datum.dan}</span>
+            <span className="text-[11px] text-muted">{datum.godina}</span>
+          </>
+        ) : (
+          <span className="text-xs text-muted">—</span>
+        )}
       </div>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-sm text-muted">
-        <span>{formatDate(race.datumPocetka)}</span>
-        {race.duljinaKm ? <span>{race.duljinaKm} km</span> : null}
-        {race.visinaM ? <span>{race.visinaM} m+</span> : null}
-        {race.link ? (
-          <a href={race.link} target="_blank" rel="noreferrer" className="text-accent hover:underline">
-            link
-          </a>
-        ) : null}
-        {race.lokacijaLink ? (
-          <a href={race.lokacijaLink} target="_blank" rel="noreferrer" className="text-accent hover:underline">
-            mapa
-          </a>
-        ) : null}
+
+      <div className="flex min-w-0 flex-1 flex-col p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="break-words font-display text-lg font-bold">{race.naziv}</h3>
+            {race.lokacija && (
+              <p className="mt-0.5 flex items-center gap-1 break-words text-sm text-muted">
+                <IconPin className="flex-none" />
+                {race.lokacija}
+              </p>
+            )}
+          </div>
+          <StatusPill status={race.statusPrijave} />
+        </div>
+
+        {(race.vrijemePocetka || race.duljinaKm || race.visinaM) && (
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-sm text-muted">
+            {race.vrijemePocetka ? <span>{race.vrijemePocetka}</span> : null}
+            {race.duljinaKm ? (
+              <span className="inline-flex items-center gap-1">
+                <IconRoute />
+                {race.duljinaKm} km
+              </span>
+            ) : null}
+            {race.visinaM ? (
+              <span className="inline-flex items-center gap-1">
+                <IconElevation />
+                {race.visinaM} m+
+              </span>
+            ) : null}
+          </div>
+        )}
+
+        {(race.link || race.lokacijaLink) && (
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {race.link ? (
+              <a
+                href={race.link}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-accent hover:underline"
+              >
+                <IconLink /> link
+              </a>
+            ) : null}
+            {race.lokacijaLink ? (
+              <a
+                href={race.lokacijaLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-accent hover:underline"
+              >
+                <IconMap /> mapa
+              </a>
+            ) : null}
+          </div>
+        )}
+
+        {isOwner && (
+          <div className="mt-auto flex justify-end gap-3 pt-3 font-mono text-xs">
+            <button type="button" onClick={() => onEdit(race)} className="text-accent hover:underline" title="Uredi utrku">
+              uredi
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(race.id)}
+              className="text-long hover:underline"
+              title="Obriši utrku"
+            >
+              obriši
+            </button>
+          </div>
+        )}
       </div>
     </li>
   )
@@ -183,6 +219,7 @@ function Gate() {
       <NavBar />
       <Routes>
         <Route path="/" element={<RaceList />} />
+        <Route path="/kalendar" element={<CalendarView />} />
         <Route path="/admin/korisnici" element={<AdminUsers />} />
         <Route path="/admin/sigurnost" element={<AdminSecurity />} />
       </Routes>

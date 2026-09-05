@@ -1,6 +1,7 @@
-const { onCall, HttpsError } = require('firebase-functions/v2/https')
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const { beforeUserCreated } = require('firebase-functions/v2/identity')
 const admin = require('firebase-admin')
+const crypto = require('crypto')
 
 admin.initializeApp()
 
@@ -240,4 +241,133 @@ exports.fetchLinkPreview = onCall(async (request) => {
   if (mapsMatch) mapsLink = mapsMatch[0]
 
   return { title, description, image, event, guessedDate, mapsLink, url: target.toString() }
+})
+
+/**
+ * "Podijeli kalendar": vlasnik dobije tajni link (token) koji zalijepi u
+ * Google/Apple/Outlook kalendar kao "pretplatu" (subscribe by URL). Token
+ * cuvamo u postavke/kalendar - to nije u firestore.rules pa ga klijent NE
+ * moze citati/pisati izravno, samo preko ovih (owner-only) funkcija.
+ */
+exports.getCalendarShareLink = onCall(async (request) => {
+  if (request.auth?.token?.email !== OWNER_EMAIL) {
+    throw new HttpsError('permission-denied', 'Samo administrator smije upravljati kalendarom.')
+  }
+  const ref = admin.firestore().doc('postavke/kalendar')
+  const snap = await ref.get()
+  let token = snap.exists ? snap.data().token : null
+  if (!token) {
+    token = crypto.randomBytes(24).toString('hex')
+    await ref.set({ token }, { merge: true })
+  }
+  return { token }
+})
+
+exports.rotateCalendarShareLink = onCall(async (request) => {
+  if (request.auth?.token?.email !== OWNER_EMAIL) {
+    throw new HttpsError('permission-denied', 'Samo administrator smije upravljati kalendarom.')
+  }
+  const token = crypto.randomBytes(24).toString('hex')
+  await admin.firestore().doc('postavke/kalendar').set({ token }, { merge: true })
+  return { token }
+})
+
+// RFC 5545: escape rezerviranih znakova u tekstualnim poljima (SUMMARY, DESCRIPTION...).
+function icsEscape(text) {
+  return String(text)
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\n/g, '\\n')
+}
+
+// RFC 5545: redovi u .ics fileu ne smiju biti dulji od 75 okteta - dulje treba
+// prelomiti, s razmakom na pocetku nastavka.
+function icsFold(line) {
+  if (Buffer.byteLength(line, 'utf8') <= 75) return line
+  let result = ''
+  let chunk = ''
+  for (const ch of line) {
+    if (Buffer.byteLength(chunk + ch, 'utf8') > 74) {
+      result += (result ? '\r\n ' : '') + chunk
+      chunk = ch
+    } else {
+      chunk += ch
+    }
+  }
+  return result + (result ? '\r\n ' : '') + chunk
+}
+
+function icsLocalStamp(date) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}${p(date.getMonth() + 1)}${p(date.getDate())}T${p(date.getHours())}${p(date.getMinutes())}${p(date.getSeconds())}`
+}
+
+function icsUtcStamp(date) {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${date.getUTCFullYear()}${p(date.getUTCMonth() + 1)}${p(date.getUTCDate())}T${p(date.getUTCHours())}${p(date.getUTCMinutes())}${p(date.getUTCSeconds())}Z`
+}
+
+/**
+ * Javni (bez Firebase Autha) .ics feed - ovo zovu Google/Apple/Outlook kalendar
+ * kad se netko pretplati na link iz "Podijeli kalendar". Umjesto Firebase Autha
+ * (kalendar aplikacije ga ne podrzavaju) provjeravamo tajni token iz linka.
+ */
+exports.calendarFeed = onRequest(async (req, res) => {
+  const token = String(req.query.token || '')
+  if (!token) {
+    res.status(400).send('Nedostaje token.')
+    return
+  }
+  const settingsSnap = await admin.firestore().doc('postavke/kalendar').get()
+  if (!settingsSnap.exists || settingsSnap.data().token !== token) {
+    res.status(403).send('Nevažeći link.')
+    return
+  }
+
+  const racesSnap = await admin.firestore().collection('races').orderBy('datumPocetka', 'asc').get()
+  const now = new Date()
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Borivert//Kalendar utrka//HR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'X-WR-CALNAME:Borivert - moje utrke',
+    'X-WR-TIMEZONE:Europe/Zagreb',
+    'REFRESH-INTERVAL;VALUE=DURATION:P1D',
+    'X-PUBLISHED-TTL:P1D',
+  ]
+
+  racesSnap.forEach((doc) => {
+    const r = doc.data()
+    if (!r.datumPocetka?.toDate) return
+    const start = r.datumPocetka.toDate()
+    const end = new Date(start.getTime() + 4 * 60 * 60 * 1000) // pretpostavka: 4h trajanje
+
+    const opis = []
+    if (r.duljinaKm) opis.push(`${r.duljinaKm} km`)
+    if (r.visinaM) opis.push(`${r.visinaM} m+`)
+    if (r.statusPrijave) opis.push(`Status: ${r.statusPrijave}`)
+    if (r.link) opis.push(r.link)
+
+    lines.push('BEGIN:VEVENT')
+    lines.push(`UID:${doc.id}@borivert`)
+    lines.push(`DTSTAMP:${icsUtcStamp(now)}`)
+    lines.push(`DTSTART:${icsLocalStamp(start)}`)
+    lines.push(`DTEND:${icsLocalStamp(end)}`)
+    lines.push(icsFold(`SUMMARY:${icsEscape(r.naziv || 'Utrka')}`))
+    if (r.lokacija) lines.push(icsFold(`LOCATION:${icsEscape(r.lokacija)}`))
+    if (opis.length) lines.push(icsFold(`DESCRIPTION:${icsEscape(opis.join(' | '))}`))
+    if (r.lokacijaLink) lines.push(icsFold(`URL:${icsEscape(r.lokacijaLink)}`))
+    lines.push('END:VEVENT')
+  })
+
+  lines.push('END:VCALENDAR')
+
+  res.set('Content-Type', 'text/calendar; charset=utf-8')
+  res.set('Content-Disposition', 'inline; filename="borivert.ics"')
+  res.set('Cache-Control', 'public, max-age=3600')
+  res.status(200).send(lines.join('\r\n') + '\r\n')
 })

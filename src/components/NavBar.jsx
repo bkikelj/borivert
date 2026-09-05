@@ -18,6 +18,9 @@ export default function NavBar() {
             <NavLink to="/" end className={tabClass}>
               Utrke
             </NavLink>
+            <NavLink to="/kalendar" className={tabClass}>
+              Kalendar
+            </NavLink>
             {isOwner && (
               <>
                 <NavLink to="/admin/korisnici" className={tabClass}>
