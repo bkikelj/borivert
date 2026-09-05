@@ -298,11 +298,6 @@ function icsFold(line) {
   return result + (result ? '\r\n ' : '') + chunk
 }
 
-function icsLocalStamp(date) {
-  const p = (n) => String(n).padStart(2, '0')
-  return `${date.getFullYear()}${p(date.getMonth() + 1)}${p(date.getDate())}T${p(date.getHours())}${p(date.getMinutes())}${p(date.getSeconds())}`
-}
-
 function icsUtcStamp(date) {
   const p = (n) => String(n).padStart(2, '0')
   return `${date.getUTCFullYear()}${p(date.getUTCMonth() + 1)}${p(date.getUTCDate())}T${p(date.getUTCHours())}${p(date.getUTCMinutes())}${p(date.getUTCSeconds())}Z`
@@ -355,8 +350,8 @@ exports.calendarFeed = onRequest(async (req, res) => {
     lines.push('BEGIN:VEVENT')
     lines.push(`UID:${doc.id}@borivert`)
     lines.push(`DTSTAMP:${icsUtcStamp(now)}`)
-    lines.push(`DTSTART:${icsLocalStamp(start)}`)
-    lines.push(`DTEND:${icsLocalStamp(end)}`)
+    lines.push(`DTSTART:${icsUtcStamp(start)}`)
+    lines.push(`DTEND:${icsUtcStamp(end)}`)
     lines.push(icsFold(`SUMMARY:${icsEscape(r.naziv || 'Utrka')}`))
     if (r.lokacija) lines.push(icsFold(`LOCATION:${icsEscape(r.lokacija)}`))
     if (opis.length) lines.push(icsFold(`DESCRIPTION:${icsEscape(opis.join(' | '))}`))
