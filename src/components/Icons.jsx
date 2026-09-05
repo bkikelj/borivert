@@ -77,3 +77,28 @@ export function IconCopy(props) {
     </svg>
   )
 }
+
+export function IconUpload(props) {
+  return (
+    <svg {...base(props)}>
+      <path d="M12 16V4M7 9l5-5 5 5" />
+      <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+    </svg>
+  )
+}
+
+export function IconTrash(props) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7" />
+    </svg>
+  )
+}
+
+export function IconBack(props) {
+  return (
+    <svg {...base(props)}>
+      <path d="M19 12H5M11 6l-6 6 6 6" />
+    </svg>
+  )
+}

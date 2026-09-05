@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes } from 'react-router-dom'
 import { collection, deleteDoc, doc, getDocs, orderBy, query } from 'firebase/firestore'
 import { db } from './firebase'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -12,6 +12,7 @@ import AddRaceViaLink from './components/AddRaceViaLink'
 import Modal from './components/Modal'
 import StatusPill from './components/StatusPill'
 import CalendarView from './components/CalendarView'
+import RaceDetail from './components/RaceDetail'
 import { IconElevation, IconLink, IconMap, IconPin, IconRoute } from './components/Icons'
 import { formatDateParts } from './dateUtils'
 
@@ -34,7 +35,11 @@ function RaceCard({ race, isOwner, onEdit, onDelete }) {
       <div className="flex min-w-0 flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="break-words font-display text-lg font-bold">{race.naziv}</h3>
+            <h3 className="break-words font-display text-lg font-bold">
+              <Link to={`/utrka/${race.id}`} className="hover:underline">
+                {race.naziv}
+              </Link>
+            </h3>
             {race.lokacija && (
               <p className="mt-0.5 flex items-center gap-1 break-words text-sm text-muted">
                 <IconPin className="flex-none" />
@@ -220,6 +225,7 @@ function Gate() {
       <Routes>
         <Route path="/" element={<RaceList />} />
         <Route path="/kalendar" element={<CalendarView />} />
+        <Route path="/utrka/:id" element={<RaceDetail />} />
         <Route path="/admin/korisnici" element={<AdminUsers />} />
         <Route path="/admin/sigurnost" element={<AdminSecurity />} />
       </Routes>
