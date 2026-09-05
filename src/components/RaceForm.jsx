@@ -36,8 +36,8 @@ function toFormState(race) {
 }
 
 // race = null -> dodavanje nove utrke; race = { id, ...podaci } -> uredivanje postojece
-export default function RaceForm({ race, onSaved }) {
-  const [form, setForm] = useState(() => toFormState(race))
+export default function RaceForm({ race, initial, onSaved }) {
+  const [form, setForm] = useState(() => ({ ...toFormState(race), ...(initial || {}) }))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 

@@ -8,6 +8,7 @@ import NavBar from './components/NavBar'
 import AdminUsers from './components/AdminUsers'
 import AdminSecurity from './components/AdminSecurity'
 import RaceForm from './components/RaceForm'
+import AddRaceViaLink from './components/AddRaceViaLink'
 import Modal from './components/Modal'
 import StatusPill from './components/StatusPill'
 
@@ -97,13 +98,22 @@ function RaceList() {
       <div className="mb-8 flex items-center justify-between gap-4">
         <h1 className="font-display text-3xl font-bold">Moje utrke</h1>
         {isOwner && (
-          <button
-            type="button"
-            onClick={() => setFormTarget('new')}
-            className="whitespace-nowrap rounded-lg bg-accent px-4 py-2.5 font-medium text-white"
-          >
-            + Dodaj utrku
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setFormTarget('link')}
+              className="whitespace-nowrap rounded-lg border border-line bg-surface px-4 py-2.5 font-medium text-ink"
+            >
+              + Putem linka
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormTarget('new')}
+              className="whitespace-nowrap rounded-lg bg-accent px-4 py-2.5 font-medium text-white"
+            >
+              + Dodaj utrku
+            </button>
+          </div>
         )}
       </div>
 
@@ -125,16 +135,27 @@ function RaceList() {
 
       {formTarget && (
         <Modal
-          title={formTarget === 'new' ? 'Dodaj utrku' : 'Uredi utrku'}
+          title={
+            formTarget === 'new' ? 'Dodaj utrku' : formTarget === 'link' ? 'Dodaj putem linka' : 'Uredi utrku'
+          }
           onClose={() => setFormTarget(null)}
         >
-          <RaceForm
-            race={formTarget === 'new' ? null : formTarget}
-            onSaved={() => {
-              setFormTarget(null)
-              load()
-            }}
-          />
+          {formTarget === 'link' ? (
+            <AddRaceViaLink
+              onSaved={() => {
+                setFormTarget(null)
+                load()
+              }}
+            />
+          ) : (
+            <RaceForm
+              race={formTarget === 'new' ? null : formTarget}
+              onSaved={() => {
+                setFormTarget(null)
+                load()
+              }}
+            />
+          )}
         </Modal>
       )}
     </div>
