@@ -22,6 +22,11 @@ export default function NavBar() {
               Kalendar
             </NavLink>
             {isOwner && (
+              <NavLink to="/opterecenje" className={tabClass}>
+                Opterećenje
+              </NavLink>
+            )}
+            {isOwner && (
               <>
                 <NavLink to="/admin/korisnici" className={tabClass}>
                   Korisnici

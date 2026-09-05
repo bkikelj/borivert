@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Route, Routes } from 'react-router-dom'
 import { collection, deleteDoc, doc, getDocs, orderBy, query } from 'firebase/firestore'
 import { db } from './firebase'
@@ -13,10 +13,12 @@ import Modal from './components/Modal'
 import StatusPill from './components/StatusPill'
 import CalendarView from './components/CalendarView'
 import RaceDetail from './components/RaceDetail'
-import { IconElevation, IconLink, IconMap, IconPin, IconRoute } from './components/Icons'
+import Opterecenje from './components/Opterecenje'
+import { IconElevation, IconLink, IconMap, IconPin, IconRoute, IconWarning } from './components/Icons'
 import { formatDateParts } from './dateUtils'
+import { analizirajRazmakSvihUtrka } from './opterecenje'
 
-function RaceCard({ race, isOwner, onEdit, onDelete }) {
+function RaceCard({ race, isOwner, onEdit, onDelete, razmak }) {
   const datum = formatDateParts(race.datumPocetka)
   return (
     <li className="flex overflow-hidden rounded-xl border border-line bg-surface shadow-sm">
@@ -66,6 +68,14 @@ function RaceCard({ race, isOwner, onEdit, onDelete }) {
               </span>
             ) : null}
           </div>
+        )}
+
+        {razmak && (
+          <p className="mt-2 flex items-start gap-1.5 text-xs text-warn">
+            <IconWarning className="mt-0.5 flex-none" />
+            Razmak {razmak.smjer === 'prije' ? 'od' : 'do'} "{razmak.susjed.naziv}" je {razmak.gapDana} dana
+            (preporučeno barem {razmak.potrebnoDana})
+          </p>
         )}
 
         {(race.link || race.lokacijaLink) && (
@@ -136,6 +146,8 @@ function RaceList() {
     load()
   }, [load])
 
+  const razmakUpozorenja = useMemo(() => analizirajRazmakSvihUtrka(races), [races])
+
   async function handleDelete(id) {
     if (!confirm('Obrisati ovu utrku?')) return
     await deleteDoc(doc(db, 'races', id))
@@ -177,7 +189,14 @@ function RaceList() {
       {status === 'ok' && races.length > 0 && (
         <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {races.map((race) => (
-            <RaceCard key={race.id} race={race} isOwner={isOwner} onEdit={setFormTarget} onDelete={handleDelete} />
+            <RaceCard
+              key={race.id}
+              race={race}
+              isOwner={isOwner}
+              onEdit={setFormTarget}
+              onDelete={handleDelete}
+              razmak={razmakUpozorenja.get(race.id)}
+            />
           ))}
         </ul>
       )}
@@ -226,6 +245,7 @@ function Gate() {
         <Route path="/" element={<RaceList />} />
         <Route path="/kalendar" element={<CalendarView />} />
         <Route path="/utrka/:id" element={<RaceDetail />} />
+        <Route path="/opterecenje" element={<Opterecenje />} />
         <Route path="/admin/korisnici" element={<AdminUsers />} />
         <Route path="/admin/sigurnost" element={<AdminSecurity />} />
       </Routes>
