@@ -88,17 +88,17 @@ export default function RaceForm({ race, initial, onSaved }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <input placeholder="Naziv utrke" value={form.naziv} onChange={set('naziv')} className="rounded-lg border border-line px-3 py-2" />
-      <div className="flex gap-2">
-        <input placeholder="Lokacija" value={form.lokacija} onChange={set('lokacija')} className="flex-1 rounded-lg border border-line px-3 py-2" />
-        <input placeholder="Link na kartu (nije obavezno)" value={form.lokacijaLink} onChange={set('lokacijaLink')} className="flex-1 rounded-lg border border-line px-3 py-2" />
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <input placeholder="Lokacija" value={form.lokacija} onChange={set('lokacija')} className="min-w-0 rounded-lg border border-line px-3 py-2" />
+        <input placeholder="Link na kartu (nije obavezno)" value={form.lokacijaLink} onChange={set('lokacijaLink')} className="min-w-0 rounded-lg border border-line px-3 py-2" />
       </div>
-      <div className="flex gap-2">
-        <input type="date" value={form.datum} onChange={set('datum')} className="flex-1 rounded-lg border border-line px-3 py-2" />
-        <input type="time" value={form.vrijeme} onChange={set('vrijeme')} className="w-28 rounded-lg border border-line px-3 py-2" />
+      <div className="grid grid-cols-2 gap-2">
+        <input type="date" value={form.datum} onChange={set('datum')} className="min-w-0 rounded-lg border border-line px-3 py-2" />
+        <input type="time" value={form.vrijeme} onChange={set('vrijeme')} className="min-w-0 rounded-lg border border-line px-3 py-2" />
       </div>
-      <div className="flex gap-2">
-        <input type="number" step="0.1" placeholder="km" value={form.duljinaKm} onChange={set('duljinaKm')} className="flex-1 rounded-lg border border-line px-3 py-2" />
-        <input type="number" placeholder="m+" value={form.visinaM} onChange={set('visinaM')} className="flex-1 rounded-lg border border-line px-3 py-2" />
+      <div className="grid grid-cols-2 gap-2">
+        <input type="number" step="0.1" placeholder="km" value={form.duljinaKm} onChange={set('duljinaKm')} className="min-w-0 rounded-lg border border-line px-3 py-2" />
+        <input type="number" placeholder="m+" value={form.visinaM} onChange={set('visinaM')} className="min-w-0 rounded-lg border border-line px-3 py-2" />
       </div>
       <select value={form.statusPrijave} onChange={set('statusPrijave')} className="rounded-lg border border-line px-3 py-2">
         <option value="planirano">planirano</option>

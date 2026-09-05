@@ -48,7 +48,7 @@ export default function AdminUsers() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="flex-1 rounded-lg border border-line bg-surface px-3 py-2 font-mono"
+            className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 py-2 font-mono"
           />
           <button
             type="button"

@@ -11,7 +11,7 @@ export default function NavBar() {
 
   return (
     <header className="border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-6 py-4">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
         <div className="flex flex-wrap items-center gap-6">
           <span className="font-display text-xl font-bold">Borivert</span>
           <nav className="flex flex-wrap gap-1">

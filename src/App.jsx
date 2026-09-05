@@ -25,9 +25,9 @@ function RaceCard({ race, isOwner, onEdit, onDelete }) {
   return (
     <li className="flex flex-col rounded-xl border border-line bg-surface p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-display text-lg font-bold">{race.naziv}</h3>
-          <p className="text-sm text-muted">{race.lokacija}</p>
+        <div className="min-w-0">
+          <h3 className="break-words font-display text-lg font-bold">{race.naziv}</h3>
+          <p className="break-words text-sm text-muted">{race.lokacija}</p>
         </div>
         <div className="flex items-center gap-2">
           <StatusPill status={race.statusPrijave} />
@@ -102,11 +102,11 @@ function RaceList() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <div className="mb-8 flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-display text-3xl font-bold">Moje utrke</h1>
         {isOwner && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setFormTarget('link')}

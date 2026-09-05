@@ -164,13 +164,24 @@ exports.fetchLinkPreview = onCall(async (request) => {
     throw new HttpsError('unavailable', 'Ne mogu dohvatiti tu stranicu: ' + err.message)
   }
 
+  // Nazivane HTML entitete koje stranice cesto koriste u naslovima (crtice,
+  // navodnici...) - brojcane entitete (&#8211; / &#x2013;) hvatamo generickim regexom.
+  const HTML_ENTITETI = {
+    nbsp: ' ', hellip: '\u2026', mdash: '\u2014', ndash: '\u2013',
+    rsquo: '\u2019', lsquo: '\u2018', rdquo: '\u201d', ldquo: '\u201c',
+    copy: '\u00a9', reg: '\u00ae', trade: '\u2122', deg: '\u00b0',
+    laquo: '\u00ab', raquo: '\u00bb', apos: "'",
+  }
   function decodeEntities(s) {
     return s
-      .replace(/&amp;/g, '&')
+      .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+      .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+      .replace(/&([a-z]+);/gi, (m, name) => HTML_ENTITETI[name.toLowerCase()] ?? m)
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
   }
   function meta(prop) {
     const re = new RegExp(
