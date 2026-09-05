@@ -26,6 +26,7 @@ export default function AddRaceViaLink({ onSaved }) {
         naziv: data.event?.naziv || data.title || '',
         link: data.url || url,
         lokacija: data.event?.lokacija || '',
+        lokacijaLink: data.mapsLink || '',
         datum,
       })
     } catch (err) {

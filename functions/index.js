@@ -97,12 +97,18 @@ function pogodiDatumIzTeksta(html) {
   for (const m of text.matchAll(/\b(\d{4})-(\d{2})-(\d{2})\b/g)) {
     dodaj(new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
   }
-  // 21. studenog 2026. / 21 November 2026
+  // 21. studenog 2026. / 21 November 2026 (dan pa mjesec)
   const nazivi = Object.keys(MJESECI).join('|')
-  const re = new RegExp(`\\b(\\d{1,2})\\.?\\s+(${nazivi})\\.?\\s+(\\d{4})\\b`, 'gi')
-  for (const m of text.matchAll(re)) {
+  const reDanMjesec = new RegExp(`\\b(\\d{1,2})\\.?\\s+(${nazivi})\\.?\\s+(\\d{4})\\b`, 'gi')
+  for (const m of text.matchAll(reDanMjesec)) {
     const mjesec = MJESECI[m[2].toLowerCase()]
     dodaj(new Date(Number(m[3]), mjesec - 1, Number(m[1])))
+  }
+  // November 7, 2026 (mjesec pa dan - anglosaksonski poredak)
+  const reMjesecDan = new RegExp(`\\b(${nazivi})\\.?\\s+(\\d{1,2}),?\\s+(\\d{4})\\b`, 'gi')
+  for (const m of text.matchAll(reMjesecDan)) {
+    const mjesec = MJESECI[m[1].toLowerCase()]
+    dodaj(new Date(Number(m[3]), mjesec - 1, Number(m[2])))
   }
 
   if (kandidati.length === 0) return null
@@ -215,5 +221,12 @@ exports.fetchLinkPreview = onCall(async (request) => {
 
   const guessedDate = event?.datum ? null : pogodiDatumIzTeksta(html)
 
-  return { title, description, image, event, guessedDate, url: target.toString() }
+  // Potraz link na Google Maps (start/cilj lokacija) ako ga stranica sadrzi
+  let mapsLink = null
+  const mapsMatch = html.match(
+    /https:\/\/(?:www\.)?(?:goo\.gl\/maps|maps\.app\.goo\.gl|maps\.google\.[a-z.]+\/[^"'<>\s]*)[^"'<>\s]*/i,
+  )
+  if (mapsMatch) mapsLink = mapsMatch[0]
+
+  return { title, description, image, event, guessedDate, mapsLink, url: target.toString() }
 })

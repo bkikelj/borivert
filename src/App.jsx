@@ -59,6 +59,11 @@ function RaceCard({ race, isOwner, onEdit, onDelete }) {
             link
           </a>
         ) : null}
+        {race.lokacijaLink ? (
+          <a href={race.lokacijaLink} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+            mapa
+          </a>
+        ) : null}
       </div>
     </li>
   )

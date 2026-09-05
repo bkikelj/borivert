@@ -11,6 +11,7 @@ const empty = {
   visinaM: '',
   statusPrijave: 'planirano',
   link: '',
+  lokacijaLink: '',
 }
 
 function toDateInputValue(date) {
@@ -32,6 +33,7 @@ function toFormState(race) {
     visinaM: race.visinaM ?? '',
     statusPrijave: race.statusPrijave || 'planirano',
     link: race.link || '',
+    lokacijaLink: race.lokacijaLink || '',
   }
 }
 
@@ -66,6 +68,7 @@ export default function RaceForm({ race, initial, onSaved }) {
         statusPrijave: form.statusPrijave,
         startninaPlacena: race?.startninaPlacena ?? false,
         link: form.link || null,
+        lokacijaLink: form.lokacijaLink || null,
         napomene: race?.napomene ?? null,
       }
       if (race?.id) {
@@ -85,7 +88,10 @@ export default function RaceForm({ race, initial, onSaved }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <input placeholder="Naziv utrke" value={form.naziv} onChange={set('naziv')} className="rounded-lg border border-line px-3 py-2" />
-      <input placeholder="Lokacija" value={form.lokacija} onChange={set('lokacija')} className="rounded-lg border border-line px-3 py-2" />
+      <div className="flex gap-2">
+        <input placeholder="Lokacija" value={form.lokacija} onChange={set('lokacija')} className="flex-1 rounded-lg border border-line px-3 py-2" />
+        <input placeholder="Link na kartu (nije obavezno)" value={form.lokacijaLink} onChange={set('lokacijaLink')} className="flex-1 rounded-lg border border-line px-3 py-2" />
+      </div>
       <div className="flex gap-2">
         <input type="date" value={form.datum} onChange={set('datum')} className="flex-1 rounded-lg border border-line px-3 py-2" />
         <input type="time" value={form.vrijeme} onChange={set('vrijeme')} className="w-28 rounded-lg border border-line px-3 py-2" />
