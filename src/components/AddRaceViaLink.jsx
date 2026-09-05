@@ -19,11 +19,14 @@ export default function AddRaceViaLink({ onSaved }) {
     try {
       const call = httpsCallable(functions, 'fetchLinkPreview')
       const { data } = await call({ url })
+      const datum = data.event?.datum
+        ? String(data.event.datum).slice(0, 10)
+        : data.guessedDate || ''
       setInitial({
         naziv: data.event?.naziv || data.title || '',
         link: data.url || url,
         lokacija: data.event?.lokacija || '',
-        datum: data.event?.datum ? String(data.event.datum).slice(0, 10) : '',
+        datum,
       })
     } catch (err) {
       setError('Ne mogu dohvatiti podatke s linka: ' + (err.message || err))

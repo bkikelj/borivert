@@ -54,6 +54,66 @@ exports.createViewerAccount = onCall(async (request) => {
  * podatke (JSON-LD) - i naziv/datum/lokaciju dogadaja. Sve ostalo admin
  * dopunjava rucno u formi koja se otvara odmah nakon ovoga.
  */
+
+// Hrvatski i engleski nazivi mjeseci (mala slova) -> broj mjeseca. Koristi se
+// samo kao rezervni pokusaj pogadanja datuma iz obicnog teksta stranice, kad
+// stranica nema strukturirane (schema.org Event) podatke.
+const MJESECI = {
+  sijecnja: 1, veljace: 2, ozujka: 3, travnja: 4, svibnja: 5, lipnja: 6,
+  srpnja: 7, kolovoza: 8, rujna: 9, listopada: 10, studenog: 11, studenoga: 11,
+  prosinca: 12,
+  january: 1, february: 2, march: 3, april: 4, may: 5, june: 6, july: 7,
+  august: 8, september: 9, october: 10, november: 11, december: 12,
+}
+
+// Best-effort pokusaj: potraz u obicnom tekstu stranice datum koji je u
+// buducnosti (ili danas) i unutar sljedece 3 godine — to je najvjerojatnije
+// datum odrzavanja utrke, a ne npr. godina u podnozju stranice. Nikad ne
+// garantira tocnost, admin ga uvijek vidi u formi i moze ispraviti prije spremanja.
+function pogodiDatumIzTeksta(html) {
+  const text = html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+
+  const now = new Date()
+  const danas = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const maxDatum = new Date(now.getFullYear() + 3, 0, 1)
+  const kandidati = []
+
+  function dodaj(d) {
+    if (!isNaN(d) && d >= danas && d <= maxDatum) kandidati.push(d)
+  }
+
+  // 21.11.2026. ili 21. 11. 2026
+  for (const m of text.matchAll(/\b(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})\.?/g)) {
+    dodaj(new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])))
+  }
+  // 21/11/2026
+  for (const m of text.matchAll(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g)) {
+    dodaj(new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1])))
+  }
+  // 2026-11-21
+  for (const m of text.matchAll(/\b(\d{4})-(\d{2})-(\d{2})\b/g)) {
+    dodaj(new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
+  }
+  // 21. studenog 2026. / 21 November 2026
+  const nazivi = Object.keys(MJESECI).join('|')
+  const re = new RegExp(`\\b(\\d{1,2})\\.?\\s+(${nazivi})\\.?\\s+(\\d{4})\\b`, 'gi')
+  for (const m of text.matchAll(re)) {
+    const mjesec = MJESECI[m[2].toLowerCase()]
+    dodaj(new Date(Number(m[3]), mjesec - 1, Number(m[1])))
+  }
+
+  if (kandidati.length === 0) return null
+  kandidati.sort((a, b) => a - b)
+  const d = kandidati[0]
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
 exports.fetchLinkPreview = onCall(async (request) => {
   if (request.auth?.token?.email !== OWNER_EMAIL) {
     throw new HttpsError('permission-denied', 'Samo administrator smije koristiti ovu funkciju.')
@@ -153,5 +213,7 @@ exports.fetchLinkPreview = onCall(async (request) => {
     if (event) break
   }
 
-  return { title, description, image, event, url: target.toString() }
+  const guessedDate = event?.datum ? null : pogodiDatumIzTeksta(html)
+
+  return { title, description, image, event, guessedDate, url: target.toString() }
 })
