@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage'
@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { formatDate, toDate } from '../dateUtils'
 import { computeTrackStats, parseGpx } from '../gpx'
 import { dohvatiProgozu, geocodeMjesto, opisVremena } from '../weather'
+import { formatTrajanje, procijeniTrajanjeMin } from '../pace'
 import StatusPill from './StatusPill'
 import RaceMap from './RaceMap'
 import ElevationChart from './ElevationChart'
@@ -72,6 +73,11 @@ export default function RaceDetail() {
       otkazano = true
     }
   }, [race?.gpxUrl])
+
+  const procijenjenoTrajanje = useMemo(() => {
+    if (!race) return null
+    return formatTrajanje(procijeniTrajanjeMin(race.tip, race.duljinaKm, race.visinaM))
+  }, [race])
 
   async function handleUpload(e) {
     const file = e.target.files?.[0]
@@ -159,6 +165,11 @@ export default function RaceDetail() {
             {race.visinaM} m+
           </span>
         ) : null}
+        {procijenjenoTrajanje && (
+          <span className="inline-flex items-center gap-1" title="Procjena temeljem tvog dosadašnjeg tempa">
+            ~{procijenjenoTrajanje}
+          </span>
+        )}
       </div>
 
       {(race.link || race.lokacijaLink) && (

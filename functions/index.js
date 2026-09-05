@@ -298,6 +298,20 @@ function icsFold(line) {
   return result + (result ? '\r\n ' : '') + chunk
 }
 
+// Procjena trajanja utrke temeljem Borisovog stvarnog tempa iz proslih GPX
+// aktivnosti (vidi src/pace.js - ISTA vrijednost mora ostati usklađena na oba
+// mjesta, promijeni na oba ako se model osvjezi. Ovdje treba biti duplicirano
+// jer Cloud Functions ne mogu importati iz src/).
+const TEMPO_CESTA_MIN_PO_KM = 4.504
+const TEMPO_TRAIL_MIN_PO_KM = 5.478
+const TEMPO_TRAIL_MIN_PO_M_USPONA = 0.0776
+
+function procijeniTrajanjeMin(tip, km, usponM) {
+  if (!km || km <= 0) return null
+  if (tip === 'cesta') return TEMPO_CESTA_MIN_PO_KM * km
+  return TEMPO_TRAIL_MIN_PO_KM * km + TEMPO_TRAIL_MIN_PO_M_USPONA * (usponM || 0)
+}
+
 function icsUtcStamp(date) {
   const p = (n) => String(n).padStart(2, '0')
   return `${date.getUTCFullYear()}${p(date.getUTCMonth() + 1)}${p(date.getUTCDate())}T${p(date.getUTCHours())}${p(date.getUTCMinutes())}${p(date.getUTCSeconds())}Z`
@@ -339,7 +353,9 @@ exports.calendarFeed = onRequest(async (req, res) => {
     const r = doc.data()
     if (!r.datumPocetka?.toDate) return
     const start = r.datumPocetka.toDate()
-    const end = new Date(start.getTime() + 4 * 60 * 60 * 1000) // pretpostavka: 4h trajanje
+    const procMin = procijeniTrajanjeMin(r.tip, r.duljinaKm, r.visinaM)
+    const trajanjeMs = procMin != null ? procMin * 60 * 1000 : 4 * 60 * 60 * 1000 // fallback: 4h ako nema duljine
+    const end = new Date(start.getTime() + trajanjeMs)
 
     const opis = []
     if (r.duljinaKm) opis.push(`${r.duljinaKm} km`)

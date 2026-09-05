@@ -9,6 +9,7 @@ const empty = {
   vrijeme: '',
   duljinaKm: '',
   visinaM: '',
+  tip: 'trail',
   statusPrijave: 'planirano',
   link: '',
   lokacijaLink: '',
@@ -31,6 +32,7 @@ function toFormState(race) {
     vrijeme: race.vrijemePocetka || '',
     duljinaKm: race.duljinaKm ?? '',
     visinaM: race.visinaM ?? '',
+    tip: race.tip === 'cesta' ? 'cesta' : 'trail',
     statusPrijave: race.statusPrijave || 'planirano',
     link: race.link || '',
     lokacijaLink: race.lokacijaLink || '',
@@ -58,7 +60,7 @@ export default function RaceForm({ race, initial, onSaved }) {
     try {
       const payload = {
         naziv: form.naziv,
-        tip: 'trail',
+        tip: form.tip,
         lokacija: form.lokacija || null,
         datumPocetka: Timestamp.fromDate(new Date(`${form.datum}T${form.vrijeme || '09:00'}:00`)),
         vrijemePocetka: form.vrijeme || null,
@@ -100,6 +102,10 @@ export default function RaceForm({ race, initial, onSaved }) {
         <input type="number" step="0.1" placeholder="km" value={form.duljinaKm} onChange={set('duljinaKm')} className="min-w-0 rounded-lg border border-line px-3 py-2" />
         <input type="number" placeholder="m+" value={form.visinaM} onChange={set('visinaM')} className="min-w-0 rounded-lg border border-line px-3 py-2" />
       </div>
+      <select value={form.tip} onChange={set('tip')} className="rounded-lg border border-line px-3 py-2">
+        <option value="trail">trail</option>
+        <option value="cesta">cesta</option>
+      </select>
       <select value={form.statusPrijave} onChange={set('statusPrijave')} className="rounded-lg border border-line px-3 py-2">
         <option value="planirano">planirano</option>
         <option value="prijavljeno">prijavljeno</option>
